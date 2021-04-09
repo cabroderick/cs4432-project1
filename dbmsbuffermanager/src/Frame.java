@@ -1,7 +1,14 @@
 import java.util.Arrays;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOError;
+import java.io.IOException;
 import java.util.Scanner;
+
+import org.graalvm.compiler.replacements.nodes.WriteRegisterNode;
+
+import java.io.FileWriter;
 
 public class Frame {
     private byte content[]; 
@@ -25,8 +32,10 @@ public class Frame {
         return stringVal;
     }
 
-    public void updateRecord (int record, byte[] newValue) {
-        markDirty();
+    // updates the record and marks it dirty
+    public void updateRecord (int record, String value) {
+        content = value.getBytes(); // converts the bytes to a string
+        markDirty(); // marks as dirty so I/O is performed whenever the frame is evicted
     }
 
     public void markDirty () {
@@ -43,9 +52,16 @@ public class Frame {
 
     public void loadFrame (int frame) { // loads the frame into the content array
         try {
+            if (dirty) { // make sure to write to file if dirty
+                String oldFrame = System.getProperty("user.dir")+"\\src\\Project1\\F"+blockId+".txt"; // get the old frame file to override
+                FileWriter writer = new FileWriter(oldFrame, true);
+                String strToWrite = new String(content);
+                writer.write(strToWrite);
+                writer.close();
+                dirty = false; // mark as not dirty once completed
+            }
             blockId = frame;
             String filename = System.getProperty("user.dir")+"\\src\\Project1\\F"+frame+".txt"; // get the filename based on the frame number
-            System.out.println(filename);
             File frameFile = new File(filename);
             Scanner scanner = new Scanner(frameFile);
             while (scanner.hasNextLine()) {
@@ -55,6 +71,8 @@ public class Frame {
             scanner.close();
         } catch (FileNotFoundException e) {
             System.out.println("File failed to load");
+        } catch (IOException e) {
+            System.out.println("File failed to write");
         }
         
     }

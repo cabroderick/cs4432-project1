@@ -16,33 +16,41 @@ public class App {
     }
 
     private static void getInput (BufferPool pool) {
-        System.out.println("The program is ready for the next command");
         Scanner in = new Scanner(System.in);
-        String s = in.nextLine();
-        String[] sSplit = s.split(" ");
-        if (sSplit.length != 2) {
-            System.out.println("Invalid number of arguments, two required");
-        } else {
-            switch (sSplit[0]) {
-                case ("GET"):
-                    int k = parseNumber(sSplit[1]);
-                    if (k > 0) {
-                        System.out.println(pool.get(k));
-                    }
-                    break;
-                case ("SET"):
-                    break;
-                case ("PIN"):
-                    break;
-                case ("UNPIN"):
-                    break;
-                default:
-                    System.out.println("The entered command is not valid: please use GET, SET, PIN, OR UNPIN");
-                    break;
+        while(true) {
+            System.out.println("The program is ready for the next command");
+            String s = in.nextLine();
+            String[] sSplit = s.split(" ");
+            if (sSplit.length < 2) {
+                System.out.println("Invalid number of arguments, at least two required");
+            } else {
+                int k = parseNumber(sSplit[1]);
+                switch (sSplit[0]) {
+                    case ("GET"):
+                        if (k > 0) {
+                            System.out.println(pool.get(k));
+                        }
+                        break;
+                    case ("SET"):
+                        if (sSplit.length < 3) {
+                            System.out.println("3 arguments are required for SET");
+                        } else {
+                            if (k > 0) {
+                                String val = sSplit[2];
+                                pool.set(k, val);
+                            }
+                        }
+                        break;
+                    case ("PIN"):
+                        break;
+                    case ("UNPIN"):
+                        break;
+                    default:
+                        System.out.println("The entered command is not valid: please use GET, SET, PIN, OR UNPIN");
+                        break;
+                }
             }
         }
-        //in.close();
-        getInput(pool);
     }
 
     private static int parseNumber (String num) {
