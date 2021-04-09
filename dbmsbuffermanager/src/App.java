@@ -27,7 +27,7 @@ public class App {
                 case ("GET"):
                     int k = parseNumber(sSplit[1]);
                     if (k > 0) {
-                        pool.get(k);
+                        System.out.println(pool.get(k));
                     }
                     break;
                 case ("SET"):
@@ -41,6 +41,7 @@ public class App {
                     break;
             }
         }
+        //in.close();
         getInput(pool);
     }
 

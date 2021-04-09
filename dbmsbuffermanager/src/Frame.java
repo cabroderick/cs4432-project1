@@ -4,7 +4,7 @@ import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 public class Frame {
-    private byte content[];
+    private byte content[]; 
     private boolean dirty;
     private boolean pinned;
     private int blockId;
@@ -16,8 +16,13 @@ public class Frame {
         blockId = -1;
     }
 
-    public String getRecord (int record) {
-        return null;
+    public String getRecord (int record) { // get the record from the byte array and return
+        // in value will be 1-indexed so adjust accordingly
+        int minIndex = (record - 1)*40;
+        int maxIndex = (minIndex + 40); // each record is 40 bytes
+        byte[] byteArr = Arrays.copyOfRange(content, minIndex, maxIndex); // the array of bytes to convert to a string
+        String stringVal = new String(byteArr); // convert bytes to a string
+        return stringVal;
     }
 
     public void updateRecord (int record, byte[] newValue) {
@@ -32,10 +37,15 @@ public class Frame {
         return blockId;
     }
 
+    public boolean isPinned () {
+        return pinned;
+    }
+
     public void loadFrame (int frame) { // loads the frame into the content array
         try {
             blockId = frame;
-            String filename = "F"+frame; // get the filename based on the frame number
+            String filename = System.getProperty("user.dir")+"\\src\\Project1\\F"+frame+".txt"; // get the filename based on the frame number
+            System.out.println(filename);
             File frameFile = new File(filename);
             Scanner scanner = new Scanner(frameFile);
             while (scanner.hasNextLine()) {
@@ -44,7 +54,7 @@ public class Frame {
             }
             scanner.close();
         } catch (FileNotFoundException e) {
-            System.out.println("Why did you get here this wasn't supposed to happen");
+            System.out.println("File failed to load");
         }
         
     }

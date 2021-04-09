@@ -19,23 +19,21 @@ public class BufferPool {
     public String get (int k) { // gets a record k from the buffer pool
         int block = (int) Math.floor((k - 1) / 100) + 1; // k - 1 is used instead of k because block #1 ranges from 1-100, #2 101-200, etc. // indicates which file the record is present in
         if (block > frames) { // if the block # is out of range
-            return "INVALID";
+            return "The corresponding block # "+block+"cannot be accessed from disk because the memory buffers are all full.";
         }
 
-        String contents = ""; // the contents of the record, the value to return
         // now iterate through each frame in the buffers array. If the block is present in any of those frames, then fetch it. Otherwise it needs to be fetched into the first available frame.
         int selectedFrame = getFrameNum(block);
         if (selectedFrame == -1) { // the frame was not found loaded into any of the buffers, need to load it into first available frame
             selectedFrame = loadFrame(block); // load the given block into the first available frame
-            Frame frame 
-            // todo condense and refactor code right here
-        } else { // frame was found loaded, simply return value
-            int frameRecord = k - (block * 100); // the record number within the loaded buffer
-            Frame frame = buffers[selectedFrame - 1]; // the frame being accessed, -1 to offset the 1-indexing from getFrameNum
-            
+            System.out.println("I/O was performed to load the block from memory");
+        } else {
+            System.out.println("No I/O was performed");
         }
-        contents = frame.getRecord(frameRecord);
-        System.out.println("Frame # "+selectedFrame+" accessed");
+        int frameRecord = k + 100 - (block * 100); // the record number within the loaded buffer
+        Frame frame = buffers[selectedFrame - 1]; // the frame being accessed, -1 to offset the 1-indexing from getFrameNum
+        String contents = frame.getRecord(frameRecord);
+        System.out.println("The block was contained in frame #"+selectedFrame);
         return contents;
     }
 
@@ -51,11 +49,23 @@ public class BufferPool {
     }
 
 
-    // loads the block number into the first available frame. If there are no available frames then eviction will occur
+    // loads the block number into the first available frame. If there are no available frames then eviction will occur. Returns the frame that is filled
     private int loadFrame(int block) {
         int frame = getAvailableFrame();
         if (frame == -1) { // there are no available frames, eviction must occur
-            return 1; // placeholder
+            int startFrame = 0;
+            if (lastEvicted != -1) { // if there is a frame that was last evicted
+                startFrame = lastEvicted; // start looking at the last evicted frame
+            }
+            for (int i = startFrame; i < frames; i++) {
+                if (!buffers[i].isPinned()) {
+                    buffers[i].loadFrame(block);
+                    lastEvicted = i; // mark this frame as the last evicted
+                    frame = i + 1;
+                    return frame;
+                }
+            }
+            return -1; // this case should never be reached
         } else {
             // read into frame here
             buffers[frame - 1].loadFrame(block); // load the given block number into the frame
