@@ -24,6 +24,36 @@ public class BufferPool {
         return k + 100 - (block * 100);
     }
 
+    // pins a frame
+    public void pin (int BID) {
+        int selectedFrame = getFrameNum(BID);
+        if (selectedFrame == -1) { // the frame was not found loaded into any of the buffers, need to load it into first available frame
+            selectedFrame = loadFrame(BID); // load the given block into the first available frame
+            if (selectedFrame == -1) { // all frames are pinned
+                System.out.println("The corresponding block #"+BID+" cannot be accessed from disk because the memory buffers are full");
+                return;
+            }
+            System.out.println("I/O was performed to load the block from memory");
+        } else {
+            System.out.println("No I/O was performed");
+        }
+        Frame frame = buffers[selectedFrame - 1];
+        frame.pin();
+        System.out.println("Block "+BID+ " pinned");
+    }
+
+    // unpins a frame
+    public void unpin (int BID) {
+        int selectedFrame = getFrameNum(BID);
+        if (selectedFrame == -1) { // the frame was not found loaded into any of the buffers
+            System.out.println("The corresponding block "+BID+" cannot be unpinned because it is not in memory");
+            return;
+        }
+        Frame frame = buffers[selectedFrame - 1];
+        frame.unpin();
+        System.out.println("Block "+BID+ " unpinned");
+    }
+
     // update a buffer in the table
     public void set (int k, String value) {
         int block = getBlock(k);
@@ -40,6 +70,7 @@ public class BufferPool {
         }
         int frameRecord = getFrameRecord(k, block);
         Frame frame = buffers[selectedFrame - 1]; // the frame being accessed, -1 to offset the 1-indexing from getFrameNum
+        System.out.println("The block was contained in frame #"+selectedFrame);
         frame.updateRecord(frameRecord, value); // update the record
     }
 

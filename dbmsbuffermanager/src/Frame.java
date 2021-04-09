@@ -5,9 +5,6 @@ import java.io.FileWriter;
 import java.io.IOError;
 import java.io.IOException;
 import java.util.Scanner;
-
-import org.graalvm.compiler.replacements.nodes.WriteRegisterNode;
-
 import java.io.FileWriter;
 
 public class Frame {
@@ -34,8 +31,15 @@ public class Frame {
 
     // updates the record and marks it dirty
     public void updateRecord (int record, String value) {
-        content = value.getBytes(); // converts the bytes to a string
+        int minIndex = (record - 1)*40;
+        byte[] newVal = value.getBytes(); // converts the bytes to a string
+        for (int i = 0; i < 40; i++) { // go through array manually update values
+            if (i < newVal.length) { // if there is data to overwrite
+                content[minIndex + i] = newVal[i];
+            }
+        }
         markDirty(); // marks as dirty so I/O is performed whenever the frame is evicted
+        System.out.println("Write successful");
     }
 
     public void markDirty () {
@@ -50,15 +54,24 @@ public class Frame {
         return pinned;
     }
 
+    public void pin () {
+        pinned = true;
+    }
+
+    public void unpin() {
+        pinned = false;
+    }
+
     public void loadFrame (int frame) { // loads the frame into the content array
         try {
             if (dirty) { // make sure to write to file if dirty
                 String oldFrame = System.getProperty("user.dir")+"\\src\\Project1\\F"+blockId+".txt"; // get the old frame file to override
-                FileWriter writer = new FileWriter(oldFrame, true);
+                FileWriter writer = new FileWriter(oldFrame);
                 String strToWrite = new String(content);
                 writer.write(strToWrite);
                 writer.close();
                 dirty = false; // mark as not dirty once completed
+                System.out.println("Record contents were written to disk");
             }
             blockId = frame;
             String filename = System.getProperty("user.dir")+"\\src\\Project1\\F"+frame+".txt"; // get the filename based on the frame number
